@@ -42,17 +42,27 @@ def send_discord_webhook(date, rates):
         print("Eroare: DISCORD_WEBHOOK_URL nu este configurat!")
         sys.exit(1)
 
+    # Calculăm paritatea EUR/USD dacă ambele monede există
+    eur_usd_text = "N/A"
+    if isinstance(eur, (int, float)) and isinstance(usd, (int, float)) and usd > 0:
+        eur_usd_rate = eur / usd
+        eur_usd_text = f"**{eur_usd_rate:.4f}** USD"
+
+    fields = [
+        {"name": "💶 EUR", "value": format_rate(eur), "inline": True},
+        {"name": "💵 USD", "value": format_rate(usd), "inline": True},
+        {"name": "💷 GBP", "value": format_rate(gbp), "inline": True},
+        {"name": "💴 XAU", "value": format_rate(xau), "inline": True},
+        {"name": "🔄 EUR / USD", "value": eur_usd_text, "inline": True}, # Conversia directă
+    ]
+
     payload = {
         "username": "Curs BNR",
         "embeds": [
             {
                 "title": f"📢 Curs Valutar BNR — {date}",
                 "color": 3447003,
-                "fields": [
-                    {"name": "💶 EUR", "value": format_rate(rates.get('EUR', 'N/A')), "inline": True},
-                    {"name": "💵 USD", "value": format_rate(rates.get('USD', 'N/A')), "inline": True},
-                    {"name": "💴 XAU", "value": format_rate(rates.get('XAU', 'N/A')), "inline": True},
-                ],
+                "fields": fields,
                 "footer": {
                     "text": "Sursă date: Banca Națională a României"
                 }
