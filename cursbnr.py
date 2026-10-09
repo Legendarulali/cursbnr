@@ -42,7 +42,13 @@ def send_discord_webhook(date, rates):
         print("Eroare: DISCORD_WEBHOOK_URL nu este configurat!")
         sys.exit(1)
 
-    # Calculăm paritatea EUR/USD dacă ambele monede există
+    # EXTRAGEM VARIABILELE DIN DICTONAR
+    eur = rates.get('EUR')
+    usd = rates.get('USD')
+    gbp = rates.get('GBP')
+    xau = rates.get('XAU')  # Gramul de aur
+
+    # Calculăm paritatea EUR/USD dacă ambele cotații există
     eur_usd_text = "N/A"
     if isinstance(eur, (int, float)) and isinstance(usd, (int, float)) and usd > 0:
         eur_usd_rate = eur / usd
@@ -52,8 +58,8 @@ def send_discord_webhook(date, rates):
         {"name": "💶 EUR", "value": format_rate(eur), "inline": True},
         {"name": "💵 USD", "value": format_rate(usd), "inline": True},
         {"name": "💷 GBP", "value": format_rate(gbp), "inline": True},
-        {"name": "💴 XAU", "value": format_rate(xau), "inline": True},
-        {"name": "🔄 EUR / USD", "value": eur_usd_text, "inline": True}, # Conversia directă
+        {"name": "🥇 XAU (Aur)", "value": format_rate(xau), "inline": True},
+        {"name": "🔄 EUR / USD", "value": eur_usd_text, "inline": True},
     ]
 
     payload = {
