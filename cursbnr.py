@@ -1,7 +1,7 @@
-import xml.etree.ElementTree as ET
-import requests
 import os
 import sys
+import requests
+import xml.etree.ElementTree as ET
 
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 BNR_XML_URL = "https://curs.bnr.ro/nbrfxrates.xml"
@@ -10,46 +10,48 @@ def get_bnr_rates():
     response = requests.get(BNR_XML_URL)
     tree = ET.fromstring(response.content)
     
-    # Namespace-ul utilizat de BNR pentru elementele speciale
-    ns = {'bnr': 'http://www.bnro.ro/xsd'}
-    
-    # PublishingDate se află sub Header fără prefix de namespace
+    # Preluăm data publicării
     pub_date_elem = tree.find('.//Header/PublishingDate')
     if pub_date_elem is None:
-        # Fallback dacă e structurat altfel
         pub_date_elem = tree.find('.//{*}PublishingDate')
-        
     publishing_date = pub_date_elem.text if pub_date_elem is not None else "N/A"
     
     rates = {}
     
-    # Căutăm nodurile Rate folosind namespace-ul corect
-    for rate in tree.findall('.//bnr:Rate', ns):
+    # Căutăm toate nodurile Rate indiferent de namespace
+    for rate in tree.findall('.//{*}Rate'):
         currency = rate.attrib.get('currency')
-        value = float(rate.text)
-        multiplier = int(rate.attrib.get('multiplier', 1))
-        rates[currency] = value / multiplier
-        
+        if currency and rate.text:
+            try:
+                value = float(rate.text)
+                multiplier = int(rate.attrib.get('multiplier', 1))
+                rates[currency] = value / multiplier
+            except ValueError:
+                continue
+                
     return publishing_date, rates
 
-def send_discord_webhook(date, rates):
-    eur = rates.get('EUR', 'N/A')
-    usd = rates.get('USD', 'N/A')
-    gbp = rates.get('GBP', 'N/A')
-    chf = rates.get('CHF', 'N/A')
+def format_rate(val):
+    """Formatează valoarea doar dacă este număr, altfel o returnează ca text."""
+    if isinstance(val, (int, float)):
+        return f"**{val:.4f}** RON"
+    return str(val)
 
-    # Structura mesajului tip Embed pentru Discord
+def send_discord_webhook(date, rates):
+    if not DISCORD_WEBHOOK_URL:
+        print("Eroare: DISCORD_WEBHOOK_URL nu este configurat!")
+        sys.exit(1)
+
     payload = {
         "username": "Curs BNR",
-        "avatar_url": "https://www.bnr.ro/files/xml/bnr_logo.jpg", # Opțional
         "embeds": [
             {
                 "title": f"📢 Curs Valutar BNR — {date}",
-                "color": 3447003,  # Culoare albastră în format Dec
+                "color": 3447003,
                 "fields": [
-                    {"name": "💶 EUR", "value": f"**{eur:.4f}** RON", "inline": True},
-                    {"name": "💵 USD", "value": f"**{usd:.4f}** RON", "inline": True},
-                    {"name": "💴 XAU", "value": f"**{gbp:.4f}** RON", "inline": True},
+                    {"name": "💶 EUR", "value": format_rate(rates.get('EUR', 'N/A')), "inline": True},
+                    {"name": "💵 USD", "value": format_rate(rates.get('USD', 'N/A')), "inline": True},
+                    {"name": "💴 XAU", "value": format_rate(rates.get('XAU', 'N/A')), "inline": True},
                 ],
                 "footer": {
                     "text": "Sursă date: Banca Națională a României"
@@ -62,7 +64,7 @@ def send_discord_webhook(date, rates):
     if response.status_code == 204:
         print("Notificarea a fost trimisă cu succes pe Discord!")
     else:
-        print(f"Eroare la trimitere: {response.status_code}, {response.text}")
+        print(f"Eroare Discord HTTP {response.status_code}: {response.text}")
 
 if __name__ == "__main__":
     date, rates = get_bnr_rates()
