@@ -27,4 +27,4 @@ jobs:
       - name: Execută scriptul Python
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: python main.py  # Asigură-te că fișierul tău Python se numește main.py
+        run: python cursbnr.py 
