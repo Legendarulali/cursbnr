@@ -1,8 +1,8 @@
 import xml.etree.ElementTree as ET
 import requests
 import os
+import sys
 
-# Înlocuiește cu URL-ul tău real generat în Discord
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 BNR_XML_URL = "https://curs.bnr.ro/nbrfxrates.xml"
 
@@ -10,11 +10,20 @@ def get_bnr_rates():
     response = requests.get(BNR_XML_URL)
     tree = ET.fromstring(response.content)
     
+    # Namespace-ul utilizat de BNR pentru elementele speciale
     ns = {'bnr': 'http://www.bnro.ro/xsd'}
     
-    publishing_date = tree.find('.//bnr:PublishingDate', ns).text
+    # PublishingDate se află sub Header fără prefix de namespace
+    pub_date_elem = tree.find('.//Header/PublishingDate')
+    if pub_date_elem is None:
+        # Fallback dacă e structurat altfel
+        pub_date_elem = tree.find('.//{*}PublishingDate')
+        
+    publishing_date = pub_date_elem.text if pub_date_elem is not None else "N/A"
+    
     rates = {}
     
+    # Căutăm nodurile Rate folosind namespace-ul corect
     for rate in tree.findall('.//bnr:Rate', ns):
         currency = rate.attrib.get('currency')
         value = float(rate.text)
