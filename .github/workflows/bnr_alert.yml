@@ -1,0 +1,32 @@
+name: BNR Rates Discord Alert
+
+on:
+  schedule:
+    # Rulează de luni până vineri la ora 13:15 (EEST/ora României)
+    # Notă: GitHub Actions folosește fusul orar UTC. 
+    # Ora 13:15 în România (EEST, UTC+3) corespunde orei 10:15 UTC.
+    - cron: '15 10 * * 1-5'
+  workflow_dispatch: # Vă permite să rulați automatizarea manual din interfața GitHub pentru teste
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Preia codul din repozitoriu
+        uses: actions/checkout@v4
+
+      - name: Configurează mediul Python
+        uses: actions/python-action@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalează dependențele
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Execută scriptul Python
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python script.py
