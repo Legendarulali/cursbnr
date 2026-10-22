@@ -46,7 +46,7 @@ pip install -r requirements.txt
 2. Navigate to Integrations $\rightarrow$ Webhooks $\rightarrow$ New Webhook.
 3. Customize the bot name and avatar, then click Copy Webhook URL.
 
-###⚙️ GitHub Actions Automation Setup
+### 3. ⚙️ GitHub Actions Automation Setup
 
 Add the Discord Webhook Secret
 
@@ -60,19 +60,17 @@ To keep your Webhook URL secure, store it as an encrypted repository secret on G
 
 ---
 
-Workflow Configuration (.github/workflows/bnr_alert.yml)
+### 4. Workflow Configuration (.github/workflows/bnr_alert.yml)
 
 The repository includes a scheduled cron workflow that runs Monday through Friday:
 
-name: BNR Rates Discord Alert
+    name: BNR Rates Discord Alert
 
     on:
       schedule:
         # Runs Monday to Friday at 13:15 Romanian Time (10:15 UTC in Summer / 11:15 UTC in Winter)
         - cron: '15 10 * * 1-5'
       workflow_dispatch: # Enables manual run trigger from GitHub Actions UI
-
-YAML
 
     jobs:
         run-script:
@@ -99,7 +97,7 @@ YAML
 
 ---
 
-###💻 Local Execution
+### 💻 Local Execution
 
 To test the script locally on your machine, set the environment variable and run the Python script:
 
@@ -113,10 +111,14 @@ On Windows (PowerShell):
 $env:DISCORD_WEBHOOK_URL="your_discord_webhook_url_here"
 python cursbnr.py
 
-###📄 License
+---
+
+### 📄 License
 
 This project is licensed under the MIT License. Free to use, modify, and distribute.
 
-###📌 Disclaimer
+---
+
+### 📌 Disclaimer
 
 Exchange rate data is sourced directly from the official public XML feed of the National Bank of Romania (BNR). This repository is an independent open-source project and is not affiliated with or endorsed by BNR.
